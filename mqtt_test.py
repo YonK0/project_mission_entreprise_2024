@@ -1,5 +1,11 @@
 import paho.mqtt.client as mqtt
 import pexpect
+import json 
+
+# Function to load configuration from JSON file
+def load_config(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
 def run_command_with_password(command, password):
     # Join the command list into a single string
@@ -20,15 +26,19 @@ def run_command_with_password(command, password):
     # Print the output of the command
     print(child.before.decode())
 
-# Define your password here (note: this is insecure and not recommended for production use)
-sudo_password = 'lklk' #just for testing 
+def start_mqtt() : 
+    
+    # Enable Mosquitto to start on boot
+    run_command_with_password(['systemctl', 'enable', 'mosquitto'], sudo_password)
 
-# Enable Mosquitto to start on boot
-run_command_with_password(['systemctl', 'enable', 'mosquitto'], sudo_password)
+    # Start the Mosquitto service
+    run_command_with_password(['systemctl', 'start', 'mosquitto'], sudo_password)
 
-# Start the Mosquitto service
-run_command_with_password(['systemctl', 'start', 'mosquitto'], sudo_password)
 
+################CONFIG#################################
+
+# Load configuration
+config = load_config('config.json')
 
 # Define the MQTT broker settings
 broker = "localhost"  
@@ -38,6 +48,10 @@ port = 1883  # Default MQTT port
 topic = "test"  # Replace with your topic
 message = "Hello, Node-RED!"  # Replace with your message
 
+# Define your password here (note: this is insecure and not recommended for production use)
+sudo_password = config['sudo_pass'] #just for testing 
+
+#######################################################
 
 def mqtt_connect(topic,message) : 
     # Create an MQTT client instance

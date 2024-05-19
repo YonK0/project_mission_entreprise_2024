@@ -52,7 +52,7 @@ def detect_faces_and_eyes(frame, face_cascade, eye_cascade, directory_path, coun
         bright_face_image = adjust_brightness(roi_color, beta=50)
 
         eyes = eye_cascade.detectMultiScale(roi_color)
-        if len(eyes) > 0 and counter[0] < 10:
+        if len(eyes) > 0 and counter[0] < config['number_of_images']:
             ext = random.randint(1, 9999999)
             # Save the detected face as an image
             cv2.imwrite(f'{directory_path}face_{ext}.png', bright_face_image)
@@ -66,7 +66,8 @@ def detect_faces_and_eyes(frame, face_cascade, eye_cascade, directory_path, coun
 
 # Create output directory
 dir_ = random.randint(1, 9999999999999)
-directory_path = f'/home/aero/{dir_}/output_images/'
+home = config['home_dir']
+directory_path = f'{home}/{dir_}/output_images/'
 os.makedirs(directory_path, exist_ok=True)
 
 # Start MQTT service with sudo 
