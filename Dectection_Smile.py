@@ -58,7 +58,7 @@ def detect_faces_and_eyes(frame, face_cascade, eye_cascade, directory_path, coun
             cv2.imwrite(f'{directory_path}face_{ext}.png', bright_face_image)
             counter[0] += 1
             print(f'Screenshot taken and saved as face_{ext}.png')
-            if counter[0] >= 10:
+            if counter[0] >= config['number_of_images']:
                 return True  # Indicate that the limit has been reached
     return False
 
