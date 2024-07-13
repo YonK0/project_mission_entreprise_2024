@@ -1,46 +1,16 @@
 import numpy as np
 from tensorflow.keras.preprocessing import image
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
-import matplotlib.pyplot as plt
+import tensorflow as tf
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-# Define the model architecture
-model = Sequential()
+# Load the TFLite model and allocate tensors
+interpreter = tf.lite.Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
 
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
-model.add(BatchNormalization())
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(256, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(Conv2D(256, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Flatten())
-model.add(Dense(256, activation='relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(7, activation='softmax'))
-
-# Compile the model
-model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
-
-# Load the model weights
-model.load_weights('/home/aero/Downloads/model_weights.h5')
+# Get input and output tensors
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 # Define a function to preprocess the image
 def preprocess_image(img_path):
@@ -48,44 +18,42 @@ def preprocess_image(img_path):
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array /= 255.0
-    return img_array
+    return img_array.astype(np.float32)
 
 # Define a function to make a prediction
 def predict_emotion(img_path):
     img_array = preprocess_image(img_path)
-    prediction = model.predict(img_array)
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+    interpreter.invoke()
+    prediction = interpreter.get_tensor(output_details[0]['index'])
     return np.argmax(prediction), prediction
 
 # Define a function to map the predicted class index to the emotion label
 def get_emotion_labels():
     return ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
+def Detection(dir_path):
 
+    # List of test images
+    test_images = [os.path.join(dir_path, img) for img in os.listdir(dir_path) if img.endswith(('png', 'jpg', 'jpeg'))]
 
-# Path to the directory containing the test images
-test_images_dir = '/home/aero/output_images/'
+    emotion_labels = get_emotion_labels()
 
-# List of test images
-test_images = [os.path.join(test_images_dir, img) for img in os.listdir(test_images_dir) if img.endswith(('png', 'jpg', 'jpeg'))]
+    for i, img_path in enumerate(test_images):
+        class_index, prediction = predict_emotion(img_path)
+        emotion_label = emotion_labels[class_index]
 
+        # Check if the predicted emotion is "Happy" with a probability greater than 60%
+        if emotion_label == 'Happy' and prediction[0][class_index] > 0.62:
+            # Load the original image for annotation
+            original_img = Image.open(img_path)
+            annotated_img_path = os.path.join(dir_path, f'happy_{i}.png')
+            original_img.save(annotated_img_path)
+            
+            # Annotate the image with the predicted emotion and probabilities
+            text = f'Predicted Emotion: {emotion_label}\n' + "\n".join([f"{label}: {percentage:.2f}%" for label, percentage in zip(emotion_labels, prediction[0] * 100)])
+            print("the client is happy")
+            return True
 
-emotion_labels = get_emotion_labels()
-
-for i, img_path in enumerate(test_images):
-    class_index, prediction = predict_emotion(img_path)
-    emotion_label = emotion_labels[class_index]
-
-    # Load the original image for annotation
-    original_img = Image.open(img_path).convert("RGB")
-    draw = ImageDraw.Draw(original_img)
-    font = ImageFont.load_default()
-
-    # Annotate the image with the predicted emotion and probabilities
-    text = f'Predicted Emotion: {emotion_label}\n' + "\n".join([f"{label}: {percentage:.2f}%" for label, percentage in zip(emotion_labels, prediction[0] * 100)])
-    draw.text((10, 10), text, fill="red", font=font)
-
-    # Save the annotated image
-    annotated_img_path = os.path.join(test_images_dir, f'annotated_{i}.png')
-    original_img.save(annotated_img_path)
-
-    
+    print("the client is not happy")
+    return False
