@@ -4,11 +4,28 @@ import random
 import os
 from running_model import *
 from mqtt_test import * 
+import serial
+import time
 
 # Load pre-trained face and smile detectors
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 smile_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_smile.xml')
 eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+
+
+def send_stop():
+    try: 
+        ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+        time.sleep(2)
+        ser.write(b'!\n')
+        print("Sent: signal to arduino")
+        if ser.in_waiting > 0:
+            received_data = ser.readline().decode('utf-8').strip()
+            print(f"Received: {received_data}")
+    except : 
+        print("can't send stop signal")
+
+
 
 # Function to enhance the image
 def enhance_image(image):
@@ -90,6 +107,7 @@ while True:
         if (Detection(directory_path)) : 
             message = "happy" 
             mqtt_connect(topic ,message)
+            send_stop()
             break 
         
     # Display the image
