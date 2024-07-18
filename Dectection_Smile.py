@@ -88,7 +88,7 @@ directory_path = f'{home}/{dir_}/output_images/'
 os.makedirs(directory_path, exist_ok=True)
 
 # Start MQTT service with sudo 
-start_mqtt()
+#start_mqtt()
 
 # Capture video from webcam
 webcam = cv2.VideoCapture(0)

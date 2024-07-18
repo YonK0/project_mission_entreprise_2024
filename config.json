@@ -1,6 +1,6 @@
 {
-    "home_dir": "/home/aero",
-    "number_of_images": 10,
-    "sudo_pass": "lklk"
+    "home_dir": "/home/pi",
+    "number_of_images": 3,
+    "sudo_pass": "pi"
 }
   

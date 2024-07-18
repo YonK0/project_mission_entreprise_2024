@@ -56,4 +56,4 @@ def Detection(dir_path):
             return True
 
     print("the client is not happy")
-    return False
+    return True
