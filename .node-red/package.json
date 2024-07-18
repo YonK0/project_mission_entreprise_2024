@@ -1,0 +1,12 @@
+{
+    "name": "node-red-project",
+    "description": "A Node-RED Project",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "node-red-contrib-alexa-cakebaked": "~4.0.3",
+        "node-red-contrib-alexa-home": "~2.0.2",
+        "node-red-contrib-local-alexa-devices": "~0.1.9",
+        "node-red-dashboard": "~3.6.5"
+    }
+}
